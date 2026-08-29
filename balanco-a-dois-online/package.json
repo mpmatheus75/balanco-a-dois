@@ -1,0 +1,9 @@
+{
+  "name": "balanco-a-dois",
+  "version": "2.0.0",
+  "description": "Controle financeiro compartilhado do casal — hospedado online (Vercel + Upstash Redis)",
+  "private": true,
+  "dependencies": {
+    "@upstash/redis": "^1.31.0"
+  }
+}

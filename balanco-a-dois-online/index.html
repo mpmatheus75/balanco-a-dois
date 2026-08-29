@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Balanço a Dois</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --paper:#F7F2E8;
+    --paper-2:#FBF8F2;
+    --ink:#23262B;
+    --ink-soft:#5B5A54;
+    --line:#DCD3BE;
+    --p1:#1F6F6B;
+    --p1-soft:#E4F0EE;
+    --p2:#A8447A;
+    --p2-soft:#F5E6EF;
+    --gold:#B8863B;
+    --gold-soft:#F1E4C9;
+    --danger:#B33F3F;
+    --radius:14px;
+    --shadow: 0 2px 10px rgba(35,38,43,0.06), 0 1px 2px rgba(35,38,43,0.08);
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;overscroll-behavior-y:contain;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    width:100%;
+    position:relative;
+    background-image:
+      linear-gradient(var(--paper) 0%, var(--paper) 100%),
+      repeating-linear-gradient(180deg, transparent 0px, transparent 37px, rgba(35,38,43,0.045) 38px);
+    padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .wrap{max-width:640px;margin:0 auto;padding:18px 14px 12px;}
+
+  button{touch-action:manipulation;}
+  input,select,textarea{font-size:16px;}
+
+  @media (max-width:420px){
+    .wrap{padding:14px 12px 12px;}
+    .masthead h1{font-size:22px;}
+    .stamp{width:92px;height:92px;}
+    .stamp .stamp-val{font-size:13px;}
+    .cat-grid{grid-template-columns:repeat(3,1fr);}
+  }
+
+  .masthead{
+    display:flex;align-items:baseline;justify-content:space-between;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:12px;margin-bottom:16px;
+  }
+  .masthead h1{
+    font-family:'Fraunces',serif;font-weight:700;font-style:italic;
+    font-size:26px;margin:0;letter-spacing:-0.01em;
+  }
+  .masthead .sub{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-soft);margin-top:2px;}
+  .gear-btn{
+    background:none;border:1px solid var(--line);border-radius:50%;
+    width:44px;height:44px;font-size:17px;cursor:pointer;color:var(--ink-soft);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .gear-btn:hover{border-color:var(--ink-soft);}
+  .gear-btn:active{background:rgba(35,38,43,0.08);}
+
+  .month-nav{
+    display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:18px;
+  }
+  .month-nav button{
+    background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink-soft);
+    width:44px;height:44px;border-radius:50%;
+  }
+  .month-nav button:active{background:rgba(35,38,43,0.1);}
+  .month-label{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:0.04em;
+    text-transform:capitalize;min-width:150px;text-align:center;color:var(--ink);
+  }
+
+  .stamp-row{
+    display:flex;gap:14px;align-items:stretch;margin-bottom:20px;
+  }
+  .stamp{
+    flex-shrink:0;width:112px;height:112px;border-radius:50%;
+    border:2.5px dashed var(--gold);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    transform:rotate(-4deg);color:var(--gold);
+    background:var(--gold-soft);
+  }
+  .stamp .stamp-val{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;line-height:1.1;}
+  .stamp .stamp-lbl{font-size:9px;text-transform:uppercase;letter-spacing:0.08em;margin-top:3px;}
+
+  .person-cards{flex:1;display:flex;flex-direction:column;gap:8px;}
+  .person-card{
+    border-radius:var(--radius);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;
+    box-shadow:var(--shadow);
+  }
+  .person-card.p1{background:var(--p1-soft);}
+  .person-card.p2{background:var(--p2-soft);}
+  .person-card .name{font-weight:600;font-size:13px;display:flex;align-items:center;gap:6px;}
+  .person-card.p1 .name{color:var(--p1);}
+  .person-card.p2 .name{color:var(--p2);}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .person-card.p1 .dot{background:var(--p1);}
+  .person-card.p2 .dot{background:var(--p2);}
+  .person-card .amt{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;}
+
+  .section-title{
+    font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:22px 0 10px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .sync-note{font-size:10px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;font-weight:400;}
+
+  .cat-bars{display:flex;flex-direction:column;gap:7px;margin-bottom:6px;}
+  .cat-bar-row{display:flex;align-items:center;gap:8px;font-size:12px;}
+  .cat-bar-row .cat-name{width:88px;flex-shrink:0;color:var(--ink-soft);}
+  .cat-bar-track{flex:1;background:rgba(35,38,43,0.06);border-radius:6px;height:9px;overflow:hidden;}
+  .cat-bar-fill{height:100%;background:var(--gold);border-radius:6px;}
+  .cat-bar-row .cat-amt{font-family:'IBM Plex Mono',monospace;font-size:11px;width:70px;text-align:right;flex-shrink:0;}
+
+  .empty-state{
+    text-align:center;padding:30px 20px;color:var(--ink-soft);font-size:13px;
+    border:1px dashed var(--line);border-radius:var(--radius);
+  }
+
+  .entry-list{display:flex;flex-direction:column;}
+  .day-group-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;
+    letter-spacing:0.06em;color:var(--ink-soft);margin:14px 0 6px;
+  }
+  .entry{
+    display:flex;align-items:center;gap:10px;padding:12px 4px;
+    border-bottom:1px solid var(--line);position:relative;
+  }
+  .entry:last-child{border-bottom:none;}
+  .entry .stripe{width:3px;align-self:stretch;border-radius:2px;flex-shrink:0;}
+  .entry.p1 .stripe{background:var(--p1);}
+  .entry.p2 .stripe{background:var(--p2);}
+  .entry .cat-emoji{font-size:19px;flex-shrink:0;}
+  .entry .entry-main{flex:1;min-width:0;}
+  .entry .entry-desc{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .entry .entry-meta{font-size:11px;color:var(--ink-soft);margin-top:1px;}
+  .entry .entry-amt{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13.5px;flex-shrink:0;white-space:nowrap;}
+  .entry .del-btn{
+    background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:14px;
+    opacity:0.45;flex-shrink:0;padding:10px 6px;width:38px;height:38px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .entry:hover .del-btn{opacity:1;}
+  .del-btn:active{color:var(--danger);opacity:1;}
+
+  .fab{
+    position:fixed;bottom:calc(18px + env(safe-area-inset-bottom, 0px));left:50%;transform:translateX(-50%);
+    background:var(--ink);color:var(--paper-2);border:none;border-radius:30px;
+    padding:14px 26px;font-size:14.5px;font-weight:600;cursor:pointer;
+    box-shadow:0 4px 16px rgba(35,38,43,0.28);
+    display:flex;align-items:center;gap:8px;
+    font-family:'Inter',sans-serif;
+    width:calc(100% - 32px);max-width:360px;justify-content:center;
+  }
+  .fab:active{background:#000;}
+
+  .overlay{
+    position:fixed;inset:0;background:rgba(35,38,43,0.45);
+    display:flex;align-items:flex-end;justify-content:center;z-index:50;
+  }
+  .modal{
+    background:var(--paper-2);width:100%;max-width:480px;border-radius:20px 20px 0 0;
+    padding:22px 20px calc(26px + env(safe-area-inset-bottom, 0px));
+    max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  }
+  .modal h2{font-family:'Fraunces',serif;font-size:19px;margin:0 0 16px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-soft);margin-bottom:6px;}
+  .field input, .field select, .field textarea{
+    width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;
+    font-size:14.5px;font-family:'Inter',sans-serif;background:var(--paper);color:var(--ink);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--gold);outline-offset:1px;}
+  .amount-input{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;}
+  .who-toggle{display:flex;gap:8px;}
+  .who-toggle button{
+    flex:1;padding:11px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);
+    font-weight:600;font-size:13.5px;cursor:pointer;color:var(--ink-soft);
+  }
+  .who-toggle button.active.p1{border-color:var(--p1);background:var(--p1-soft);color:var(--p1);}
+  .who-toggle button.active.p2{border-color:var(--p2);background:var(--p2-soft);color:var(--p2);}
+  .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .cat-grid button{
+    padding:10px 4px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);
+    cursor:pointer;font-size:11px;color:var(--ink-soft);display:flex;flex-direction:column;align-items:center;gap:4px;
+  }
+  .cat-grid button span.em{font-size:18px;}
+  .cat-grid button.active{border-color:var(--gold);background:var(--gold-soft);color:var(--ink);}
+  .modal-actions{display:flex;gap:10px;margin-top:18px;}
+  .btn-primary{
+    flex:1;background:var(--ink);color:var(--paper-2);border:none;border-radius:10px;
+    padding:13px;font-weight:600;font-size:14px;cursor:pointer;
+  }
+  .btn-primary:hover{background:#000;}
+  .btn-ghost{
+    background:none;border:1px solid var(--line);color:var(--ink-soft);border-radius:10px;
+    padding:13px 18px;font-weight:600;font-size:14px;cursor:pointer;
+  }
+
+  .profile-gate{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-height:80vh;padding:30px 24px;text-align:center;
+  }
+  .profile-gate h1{font-family:'Fraunces',serif;font-style:italic;font-size:26px;margin-bottom:6px;}
+  .profile-gate p{color:var(--ink-soft);font-size:13.5px;margin-bottom:28px;max-width:320px;}
+  .profile-choice{display:flex;flex-direction:column;gap:12px;width:100%;max-width:300px;}
+  .profile-choice button{
+    padding:18px;border-radius:14px;border:1.5px solid var(--line);background:var(--paper-2);
+    font-family:'Fraunces',serif;font-size:17px;font-weight:600;cursor:pointer;
+    box-shadow:var(--shadow);
+  }
+  .profile-choice button.p1{color:var(--p1);}
+  .profile-choice button.p2{color:var(--p2);}
+  .profile-choice button:hover{transform:translateY(-1px);}
+  .rename-link{font-size:12px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;margin-top:20px;background:none;border:none;font-family:'Inter',sans-serif;}
+
+  .loading-msg{text-align:center;padding:60px 20px;color:var(--ink-soft);font-size:13px;font-family:'IBM Plex Mono',monospace;}
+  .error-msg{text-align:center;padding:60px 20px;color:var(--danger);font-size:13px;font-family:'IBM Plex Mono',monospace;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="loading-msg">Abrindo o livro-caixa…</div>
+</div>
+
+<script>
+(function(){
+  const CATEGORIES = [
+    {id:'alimentacao', name:'Alimentação', emoji:'🍽️'},
+    {id:'transporte', name:'Transporte', emoji:'🚗'},
+    {id:'casa', name:'Casa', emoji:'🏠'},
+    {id:'saude', name:'Saúde', emoji:'💊'},
+    {id:'lazer', name:'Lazer', emoji:'🎉'},
+    {id:'compras', name:'Compras', emoji:'🛍️'},
+    {id:'contas', name:'Contas', emoji:'🧾'},
+    {id:'outros', name:'Outros', emoji:'📦'},
+  ];
+
+  const MONTH_NAMES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+  let state = {
+    settings: null,
+    expenses: [],
+    profile: null,
+    currentMonth: new Date().toISOString().slice(0,7),
+    modal: null,
+    draft: null,
+    loaded: false,
+    lastSync: null,
+    error: null,
+  };
+
+  const root = document.getElementById('root');
+
+  // ---------- API helpers (talk to server.js instead of window.storage) ----------
+
+  async function apiGet(url){
+    const r = await fetch(url);
+    if(!r.ok) throw new Error('Falha ao buscar ' + url);
+    return r.json();
+  }
+  async function apiPost(url, body){
+    const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+    if(!r.ok) throw new Error('Falha ao salvar em ' + url);
+    return r.json();
+  }
+  async function apiDelete(url){
+    const r = await fetch(url, {method:'DELETE'});
+    if(!r.ok) throw new Error('Falha ao excluir em ' + url);
+    return r.json();
+  }
+
+  function fmtBRL(n){
+    return new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL'}).format(n||0);
+  }
+  function todayISO(){ return new Date().toISOString().slice(0,10); }
+  function personIndex(name){
+    if(!state.settings) return 0;
+    return state.settings.names[0] === name ? 0 : 1;
+  }
+
+  // profile (quem está usando este aparelho) fica só no navegador local
+  function loadProfile(){
+    const raw = localStorage.getItem('balanco-a-dois-profile');
+    state.profile = raw ? JSON.parse(raw) : null;
+  }
+  function saveProfile(name){
+    state.profile = {name};
+    localStorage.setItem('balanco-a-dois-profile', JSON.stringify(state.profile));
+  }
+
+  async function init(){
+    try{
+      const [settings, expenses] = await Promise.all([
+        apiGet('/api/settings'),
+        apiGet('/api/expenses'),
+      ]);
+      state.settings = settings;
+      state.expenses = expenses;
+      loadProfile();
+      state.loaded = true;
+      state.lastSync = new Date();
+      render();
+      startPolling();
+    }catch(e){
+      root.innerHTML = '<div class="error-msg">Não consegui falar com o servidor.<br/>Confirme que rodou <code>npm start</code> e que está acessando pelo endereço certo.</div>';
+    }
+  }
+
+  function startPolling(){
+    setInterval(async ()=>{
+      if(state.modal) return;
+      try{
+        const [settings, expenses] = await Promise.all([
+          apiGet('/api/settings'),
+          apiGet('/api/expenses'),
+        ]);
+        state.settings = settings;
+        state.expenses = expenses;
+        state.lastSync = new Date();
+        render();
+      }catch(e){/* ignora falhas passageiras de rede */}
+    }, 6000);
+  }
+
+  // ---------- rendering ----------
+
+  function render(){
+    if(!state.loaded) return;
+    if(!state.profile){ renderProfileGate(); return; }
+    renderApp();
+  }
+
+  function renderProfileGate(renaming){
+    const [n1, n2] = state.settings.names;
+    if(renaming){
+      root.innerHTML = `
+        <div class="profile-gate">
+          <h1>Quem escreve hoje?</h1>
+          <p>Ajuste os nomes de quem divide esse caixa.</p>
+          <div class="profile-choice">
+            <div class="field"><label>Primeiro nome</label><input id="rn1" value="${escapeHtml(n1)}"/></div>
+            <div class="field"><label>Segundo nome</label><input id="rn2" value="${escapeHtml(n2)}"/></div>
+            <button class="btn-primary" id="saveNames">Salvar nomes</button>
+          </div>
+          <button class="rename-link" id="backGate">voltar</button>
+        </div>`;
+      document.getElementById('saveNames').onclick = async ()=>{
+        const v1 = document.getElementById('rn1').value.trim() || 'Você';
+        const v2 = document.getElementById('rn2').value.trim() || 'Esposa';
+        state.settings = await apiPost('/api/settings', {names:[v1, v2]});
+        renderProfileGate(false);
+      };
+      document.getElementById('backGate').onclick = ()=>renderProfileGate(false);
+      return;
+    }
+    root.innerHTML = `
+      <div class="profile-gate">
+        <h1>Balanço a Dois</h1>
+        <p>O caixinha compartilhado de vocês dois. Toque no seu nome para começar a lançar gastos.</p>
+        <div class="profile-choice">
+          <button class="p1" id="pick0">${escapeHtml(n1)}</button>
+          <button class="p2" id="pick1">${escapeHtml(n2)}</button>
+        </div>
+        <button class="rename-link" id="renameLink">ajustar nomes</button>
+      </div>`;
+    document.getElementById('pick0').onclick = ()=>{ saveProfile(n1); render(); };
+    document.getElementById('pick1').onclick = ()=>{ saveProfile(n2); render(); };
+    document.getElementById('renameLink').onclick = ()=>renderProfileGate(true);
+  }
+
+  function monthExpenses(){
+    return state.expenses.filter(e=>e.date.slice(0,7) === state.currentMonth)
+      .sort((a,b)=> b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+  }
+  function totalsByPerson(list){
+    const [n1, n2] = state.settings.names;
+    const t = {[n1]:0, [n2]:0};
+    list.forEach(e=>{ t[e.person] = (t[e.person]||0) + e.amount; });
+    return t;
+  }
+  function totalsByCategory(list){
+    const t = {};
+    list.forEach(e=>{ t[e.category] = (t[e.category]||0) + e.amount; });
+    return Object.entries(t).sort((a,b)=>b[1]-a[1]);
+  }
+  function monthLabel(ym){
+    const [y,m] = ym.split('-').map(Number);
+    return `${MONTH_NAMES[m-1]} de ${y}`;
+  }
+  function shiftMonth(delta){
+    const [y,m] = state.currentMonth.split('-').map(Number);
+    const d = new Date(y, m-1+delta, 1);
+    state.currentMonth = d.toISOString().slice(0,7);
+    render();
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function groupByDay(list){
+    const groups = {};
+    list.forEach(e=>{ (groups[e.date] = groups[e.date] || []).push(e); });
+    return Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0]));
+  }
+  function dayLabel(dateStr){
+    const d = new Date(dateStr + 'T00:00:00');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const diffDays = Math.round((today - d) / 86400000);
+    if(diffDays === 0) return 'Hoje';
+    if(diffDays === 1) return 'Ontem';
+    return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'long', weekday:'short'});
+  }
+
+  function renderApp(){
+    const [n1, n2] = state.settings.names;
+    const list = monthExpenses();
+    const totalMonth = list.reduce((s,e)=>s+e.amount,0);
+    const perPerson = totalsByPerson(list);
+    const perCat = totalsByCategory(list);
+    const maxCat = perCat.length ? perCat[0][1] : 1;
+    const days = groupByDay(list);
+
+    root.innerHTML = `
+      <div class="wrap">
+        <div class="masthead">
+          <div>
+            <h1>Balanço a Dois</h1>
+            <div class="sub">Caixa de ${escapeHtml(n1)} &amp; ${escapeHtml(n2)}</div>
+          </div>
+          <button class="gear-btn" id="openSettings" title="Ajustes">⚙</button>
+        </div>
+
+        <div class="month-nav">
+          <button id="prevMonth">‹</button>
+          <div class="month-label">${monthLabel(state.currentMonth)}</div>
+          <button id="nextMonth">›</button>
+        </div>
+
+        <div class="stamp-row">
+          <div class="stamp">
+            <div class="stamp-val">${fmtBRL(totalMonth)}</div>
+            <div class="stamp-lbl">no mês</div>
+          </div>
+          <div class="person-cards">
+            <div class="person-card p1">
+              <span class="name"><span class="dot"></span>${escapeHtml(n1)}</span>
+              <span class="amt">${fmtBRL(perPerson[n1])}</span>
+            </div>
+            <div class="person-card p2">
+              <span class="name"><span class="dot"></span>${escapeHtml(n2)}</span>
+              <span class="amt">${fmtBRL(perPerson[n2])}</span>
+            </div>
+          </div>
+        </div>
+
+        ${perCat.length ? `
+        <div class="section-title">Por categoria</div>
+        <div class="cat-bars">
+          ${perCat.map(([cat, val])=>{
+            const c = CATEGORIES.find(c=>c.id===cat) || {name:cat, emoji:'📦'};
+            return `<div class="cat-bar-row">
+              <div class="cat-name">${c.emoji} ${escapeHtml(c.name)}</div>
+              <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${Math.max(6,(val/maxCat*100))}%"></div></div>
+              <div class="cat-amt">${fmtBRL(val)}</div>
+            </div>`;
+          }).join('')}
+        </div>` : ''}
+
+        <div class="section-title">Lançamentos <span class="sync-note" id="syncNote"></span></div>
+        <div class="entry-list">
+          ${days.length ? days.map(([date, items])=>`
+            <div class="day-group-label">${dayLabel(date)}</div>
+            ${items.map(e=>{
+              const c = CATEGORIES.find(c=>c.id===e.category) || {name:e.category, emoji:'📦'};
+              const pIdx = personIndex(e.person);
+              return `<div class="entry ${pIdx===0?'p1':'p2'}" data-id="${e.id}">
+                <div class="stripe"></div>
+                <div class="cat-emoji">${c.emoji}</div>
+                <div class="entry-main">
+                  <div class="entry-desc">${escapeHtml(e.desc || c.name)}</div>
+                  <div class="entry-meta">${escapeHtml(e.person)} · ${escapeHtml(c.name)}</div>
+                </div>
+                <div class="entry-amt">${fmtBRL(e.amount)}</div>
+                <button class="del-btn" data-del="${e.id}" title="Excluir">✕</button>
+              </div>`;
+            }).join('')}
+          `).join('') : `<div class="empty-state">Nenhum gasto lançado neste mês ainda.<br/>Toque em "Lançar gasto" para começar.</div>`}
+        </div>
+      </div>
+
+      <button class="fab" id="openAdd">+ Lançar gasto</button>
+    `;
+
+    document.getElementById('prevMonth').onclick = ()=>shiftMonth(-1);
+    document.getElementById('nextMonth').onclick = ()=>shiftMonth(1);
+    document.getElementById('openAdd').onclick = openAddModal;
+    document.getElementById('openSettings').onclick = openSettingsModal;
+    document.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.onclick = async (ev)=>{
+        ev.stopPropagation();
+        const id = btn.getAttribute('data-del');
+        try{
+          await apiDelete('/api/expenses/' + id);
+          state.expenses = state.expenses.filter(e=>e.id !== id);
+          render();
+        }catch(e){ alert('Não consegui excluir agora. Tente de novo.'); }
+      };
+    });
+    const syncNote = document.getElementById('syncNote');
+    if(syncNote && state.lastSync){
+      syncNote.textContent = 'sincronizado ' + state.lastSync.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    }
+  }
+
+  // ---------- add expense modal ----------
+
+  function openAddModal(){
+    state.draft = { amount:'', category:'alimentacao', desc:'', date:todayISO(), person: state.profile.name };
+    state.modal = 'add';
+    renderAddModal();
+  }
+
+  function renderAddModal(){
+    const [n1, n2] = state.settings.names;
+    const d = state.draft;
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <h2>Novo lançamento</h2>
+        <div class="field">
+          <label>Valor</label>
+          <input class="amount-input" id="fAmount" inputmode="decimal" placeholder="0,00" value="${d.amount}"/>
+        </div>
+        <div class="field">
+          <label>Quem gastou</label>
+          <div class="who-toggle">
+            <button type="button" class="${d.person===n1?'active p1':''}" data-who="${escapeHtml(n1)}">${escapeHtml(n1)}</button>
+            <button type="button" class="${d.person===n2?'active p2':''}" data-who="${escapeHtml(n2)}">${escapeHtml(n2)}</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Categoria</label>
+          <div class="cat-grid">
+            ${CATEGORIES.map(c=>`<button type="button" class="${d.category===c.id?'active':''}" data-cat="${c.id}"><span class="em">${c.emoji}</span>${c.name}</button>`).join('')}
+          </div>
+        </div>
+        <div class="field">
+          <label>Descrição (opcional)</label>
+          <input id="fDesc" placeholder="Ex: supermercado, uber, farmácia…" value="${escapeHtml(d.desc)}"/>
+        </div>
+        <div class="field">
+          <label>Data</label>
+          <input id="fDate" type="date" value="${d.date}"/>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-ghost" id="cancelAdd">Cancelar</button>
+          <button class="btn-primary" id="saveAdd">Salvar gasto</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    overlay.querySelectorAll('[data-who]').forEach(btn=>{
+      btn.onclick = ()=>{ d.person = btn.getAttribute('data-who'); overlay.remove(); renderAddModal(); };
+    });
+    overlay.querySelectorAll('[data-cat]').forEach(btn=>{
+      btn.onclick = ()=>{ d.category = btn.getAttribute('data-cat'); overlay.remove(); renderAddModal(); };
+    });
+    overlay.querySelector('#fAmount').oninput = (e)=>{ d.amount = e.target.value; };
+    overlay.querySelector('#fDesc').oninput = (e)=>{ d.desc = e.target.value; };
+    overlay.querySelector('#fDate').oninput = (e)=>{ d.date = e.target.value; };
+    overlay.querySelector('#cancelAdd').onclick = ()=>{ state.modal=null; overlay.remove(); };
+    overlay.querySelector('#saveAdd').onclick = async ()=>{
+      const raw = d.amount.replace(/\./g,'').replace(',', '.');
+      const amount = parseFloat(raw);
+      if(!amount || amount <= 0){
+        overlay.querySelector('#fAmount').style.borderColor = 'var(--danger)';
+        return;
+      }
+      const payload = {
+        amount, category: d.category, desc: d.desc.trim(),
+        date: d.date || todayISO(), person: d.person,
+      };
+      try{
+        const saved = await apiPost('/api/expenses', payload);
+        state.expenses.push(saved);
+        state.currentMonth = saved.date.slice(0,7);
+        state.modal = null;
+        overlay.remove();
+        render();
+      }catch(e){
+        alert('Não consegui salvar. Confira sua conexão com o servidor e tente de novo.');
+      }
+    };
+    overlay.onclick = (e)=>{ if(e.target === overlay){ state.modal=null; overlay.remove(); } };
+  }
+
+  function openSettingsModal(){
+    state.modal = 'settings';
+    renderSettingsModal();
+  }
+
+  function renderSettingsModal(){
+    const [n1, n2] = state.settings.names;
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <h2>Ajustes</h2>
+        <div class="field"><label>Nome 1</label><input id="sN1" value="${escapeHtml(n1)}"/></div>
+        <div class="field"><label>Nome 2</label><input id="sN2" value="${escapeHtml(n2)}"/></div>
+        <div class="field">
+          <label>Perfil ativo neste dispositivo</label>
+          <div class="who-toggle">
+            <button type="button" class="${state.profile.name===n1?'active p1':''}" data-prof="${escapeHtml(n1)}">${escapeHtml(n1)}</button>
+            <button type="button" class="${state.profile.name===n2?'active p2':''}" data-prof="${escapeHtml(n2)}">${escapeHtml(n2)}</button>
+          </div>
+        </div>
+        <p style="font-size:11.5px;color:var(--ink-soft);line-height:1.5;">
+          Os dados ficam no servidor e são compartilhados: tudo que qualquer um lançar aparece para os dois.
+          O "perfil ativo" só define quem aparece pré-selecionado ao lançar um gasto neste aparelho.
+        </p>
+        <div class="modal-actions">
+          <button class="btn-ghost" id="closeSettings">Fechar</button>
+          <button class="btn-primary" id="saveSettingsBtn">Salvar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    let activeProf = state.profile.name;
+    overlay.querySelectorAll('[data-prof]').forEach(btn=>{
+      btn.onclick = ()=>{
+        activeProf = btn.getAttribute('data-prof');
+        overlay.remove();
+        renderSettingsModal();
+      };
+    });
+    overlay.querySelector('#closeSettings').onclick = ()=>{ state.modal=null; overlay.remove(); };
+    overlay.querySelector('#saveSettingsBtn').onclick = async ()=>{
+      const v1 = overlay.querySelector('#sN1').value.trim() || 'Você';
+      const v2 = overlay.querySelector('#sN2').value.trim() || 'Esposa';
+      const oldN1 = state.settings.names[0], oldN2 = state.settings.names[1];
+      try{
+        state.settings = await apiPost('/api/settings', {names:[v1, v2]});
+        state.expenses = await apiGet('/api/expenses');
+        saveProfile(activeProf === oldN1 ? v1 : (activeProf === oldN2 ? v2 : activeProf));
+        state.modal = null;
+        overlay.remove();
+        render();
+      }catch(e){
+        alert('Não consegui salvar os ajustes agora.');
+      }
+    };
+    overlay.onclick = (e)=>{ if(e.target === overlay){ state.modal=null; overlay.remove(); } };
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
