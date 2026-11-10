@@ -142,6 +142,7 @@
   .entry .stripe{width:3px;align-self:stretch;border-radius:2px;flex-shrink:0;}
   .entry.p1 .stripe{background:var(--p1);}
   .entry.p2 .stripe{background:var(--p2);}
+  .entry.both .stripe{background:var(--gold);}
   .entry .cat-emoji{font-size:19px;flex-shrink:0;}
   .entry .entry-main{flex:1;min-width:0;}
   .entry .entry-desc{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -191,6 +192,13 @@
   }
   .who-toggle button.active.p1{border-color:var(--p1);background:var(--p1-soft);color:var(--p1);}
   .who-toggle button.active.p2{border-color:var(--p2);background:var(--p2-soft);color:var(--p2);}
+  .who-toggle button.active.both{border-color:var(--gold);background:var(--gold-soft);color:#8A6326;}
+  .pay-toggle{display:flex;flex-wrap:wrap;gap:8px;}
+  .pay-toggle button{
+    padding:9px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);
+    cursor:pointer;font-size:12.5px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;
+  }
+  .pay-toggle button.active{border-color:var(--gold);background:var(--gold-soft);color:var(--ink);font-weight:600;}
   .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
   .cat-grid button{
     padding:10px 4px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);
@@ -251,6 +259,17 @@
     {id:'contas', name:'Contas', emoji:'🧾'},
     {id:'outros', name:'Outros', emoji:'📦'},
   ];
+
+  const PAYMENTS = [
+    {id:'pix', name:'Pix', emoji:'⚡'},
+    {id:'debito', name:'Débito', emoji:'🏦'},
+    {id:'credito', name:'Crédito', emoji:'💳'},
+    {id:'dinheiro', name:'Dinheiro', emoji:'💵'},
+    {id:'vale', name:'Vale-alimentação', emoji:'🎟️'},
+  ];
+
+  // valor guardado em "person" quando o gasto foi dos dois juntos
+  const BOTH = 'Ambos';
 
   const MONTH_NAMES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 
@@ -392,8 +411,23 @@
   function totalsByPerson(list){
     const [n1, n2] = state.settings.names;
     const t = {[n1]:0, [n2]:0};
-    list.forEach(e=>{ t[e.person] = (t[e.person]||0) + e.amount; });
+    list.forEach(e=>{
+      if(e.person === BOTH){
+        // gasto dos dois: divide meio a meio entre os cartões
+        t[n1] += e.amount / 2;
+        t[n2] += e.amount / 2;
+      }else{
+        t[e.person] = (t[e.person]||0) + e.amount;
+      }
+    });
     return t;
+  }
+  function lastPayment(){
+    try{
+      const v = localStorage.getItem('balanco-a-dois-last-payment');
+      if(PAYMENTS.some(p=>p.id===v)) return v;
+    }catch(e){}
+    return 'pix';
   }
   function totalsByCategory(list){
     const t = {};
@@ -488,13 +522,14 @@
             <div class="day-group-label">${dayLabel(date)}</div>
             ${items.map(e=>{
               const c = CATEGORIES.find(c=>c.id===e.category) || {name:e.category, emoji:'📦'};
-              const pIdx = personIndex(e.person);
-              return `<div class="entry ${pIdx===0?'p1':'p2'}" data-id="${e.id}">
+              const pClass = e.person === BOTH ? 'both' : (personIndex(e.person)===0 ? 'p1' : 'p2');
+              const pay = PAYMENTS.find(p=>p.id===e.payment);
+              return `<div class="entry ${pClass}" data-id="${e.id}">
                 <div class="stripe"></div>
                 <div class="cat-emoji">${c.emoji}</div>
                 <div class="entry-main">
                   <div class="entry-desc">${escapeHtml(e.desc || c.name)}</div>
-                  <div class="entry-meta">${escapeHtml(e.person)} · ${escapeHtml(c.name)}</div>
+                  <div class="entry-meta">${escapeHtml(e.person)} · ${escapeHtml(c.name)}${pay ? ' · ' + escapeHtml(pay.name) : ''}</div>
                 </div>
                 <div class="entry-amt">${fmtBRL(e.amount)}</div>
                 <button class="del-btn" data-del="${e.id}" title="Excluir">✕</button>
@@ -531,7 +566,7 @@
   // ---------- add expense modal ----------
 
   function openAddModal(){
-    state.draft = { amount:'', category:'alimentacao', desc:'', date:todayISO(), person: state.profile.name };
+    state.draft = { amount:'', category:'alimentacao', payment: lastPayment(), desc:'', date:todayISO(), person: state.profile.name };
     state.modal = 'add';
     renderAddModal();
   }
@@ -553,12 +588,19 @@
           <div class="who-toggle">
             <button type="button" class="${d.person===n1?'active p1':''}" data-who="${escapeHtml(n1)}">${escapeHtml(n1)}</button>
             <button type="button" class="${d.person===n2?'active p2':''}" data-who="${escapeHtml(n2)}">${escapeHtml(n2)}</button>
+            <button type="button" class="${d.person===BOTH?'active both':''}" data-who="${BOTH}">Ambos</button>
           </div>
         </div>
         <div class="field">
           <label>Categoria</label>
           <div class="cat-grid">
             ${CATEGORIES.map(c=>`<button type="button" class="${d.category===c.id?'active':''}" data-cat="${c.id}"><span class="em">${c.emoji}</span>${c.name}</button>`).join('')}
+          </div>
+        </div>
+        <div class="field">
+          <label>Forma de pagamento</label>
+          <div class="pay-toggle">
+            ${PAYMENTS.map(p=>`<button type="button" class="${d.payment===p.id?'active':''}" data-pay="${p.id}"><span>${p.emoji}</span>${p.name}</button>`).join('')}
           </div>
         </div>
         <div class="field">
@@ -583,6 +625,9 @@
     overlay.querySelectorAll('[data-cat]').forEach(btn=>{
       btn.onclick = ()=>{ d.category = btn.getAttribute('data-cat'); overlay.remove(); renderAddModal(); };
     });
+    overlay.querySelectorAll('[data-pay]').forEach(btn=>{
+      btn.onclick = ()=>{ d.payment = btn.getAttribute('data-pay'); overlay.remove(); renderAddModal(); };
+    });
     overlay.querySelector('#fAmount').oninput = (e)=>{ d.amount = e.target.value; };
     overlay.querySelector('#fDesc').oninput = (e)=>{ d.desc = e.target.value; };
     overlay.querySelector('#fDate').oninput = (e)=>{ d.date = e.target.value; };
@@ -595,10 +640,11 @@
         return;
       }
       const payload = {
-        amount, category: d.category, desc: d.desc.trim(),
+        amount, category: d.category, payment: d.payment, desc: d.desc.trim(),
         date: d.date || todayISO(), person: d.person,
       };
       try{
+        try{ localStorage.setItem('balanco-a-dois-last-payment', d.payment); }catch(e){}
         const saved = await apiPost('/api/expenses', payload);
         state.expenses.push(saved);
         state.currentMonth = saved.date.slice(0,7);

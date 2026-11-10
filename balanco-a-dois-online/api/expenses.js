@@ -17,6 +17,7 @@ module.exports = async (req, res) => {
       const entry = {
         amount: body.amount,
         category: body.category || 'outros',
+        payment: body.payment || '',
         desc: body.desc || '',
         date: body.date || new Date().toISOString().slice(0, 10),
         person: body.person || '',
